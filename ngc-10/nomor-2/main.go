@@ -4,10 +4,23 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"strconv"
 )
 
 func main() {
+
+	cpuFile, err := os.Create("cpu.pprof")
+	if err != nil {
+		panic(err)
+	}
+	defer cpuFile.Close()
+	if err := pprof.StartCPUProfile(cpuFile); err != nil {
+		panic(err)
+	}
+	defer pprof.StopCPUProfile()
+
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Error:", err)
@@ -52,6 +65,18 @@ func main() {
 	fmt.Printf("Hasil pengurangan %.2f dan %.2f adalah: %.2f\n", num1, num2, minusResult)
 	fmt.Printf("Hasil perkalian %.2f dan %.2f adalah: %.2f\n", num1, num2, multiplicationResult)
 	fmt.Printf("Hasil pembagian %.2f dan %.2f adalah: %.2f\n", num1, num2, divisionResult)
+
+	memFile, err := os.Create("mem.pprof")
+	if err != nil {
+		fmt.Println("Error while creating memory file", err)
+	}
+	defer memFile.Close()
+
+	runtime.GC()
+	if err := pprof.WriteHeapProfile(memFile); err != nil {
+		fmt.Println("Error starting CPU Profile", err)
+		return
+	}
 }
 
 func plus(a, b float64) float64 {
